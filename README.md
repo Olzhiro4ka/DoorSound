@@ -1,45 +1,19 @@
-# Crack 🚪
+# DoorSound 🚪
 
-Turn your MacBook into a squeaky door. Crack monitors your lid angle sensor and plays a creak sound whenever you move the lid — with pitch varying based on how fast you move it.
+A macOS menu bar app that synthesizes sounds when a supported MacBook lid moves. Choose one of seven sounds, adjust the volume, or enable launch at login from the menu. The lid sensor is an undocumented Apple HID device and may not be available on every MacBook.
 
-## Features
+## Build and run
 
-- **Real-time lid detection** — Uses the built-in HID lid angle sensor at 60fps
-- **Variable pitch** — Sound playback speed scales with lid movement velocity
-- **Menu bar app** — No windows, just a clean menu bar icon
-- **18 built-in sounds** — Cracks, creaks, voice effects, synth sounds
-- **Volume control** — Adjustable via slider in the menu
+Requirements: macOS 13 or later and Apple Command Line Tools (`xcode-select --install`). The Xcode application and third-party build tools are not required.
 
-## Download
-
-Get the latest release from the [releases page](https://github.com/ronreiter/crack/releases/latest) or visit the [website](https://ronreiter.github.io/crack).
-
-## Building from Source
-
-### Requirements
-- macOS 13.0+
-- Xcode 15+
-- [Task](https://taskfile.dev) (optional, for build automation)
-
-### Quick Build
-```bash
-task run
+```sh
+make build   # produces build/DoorSound.app
+make run     # builds and opens the app
+make clean   # removes build artifacts
 ```
 
-### Full Release Build (signed + notarized)
-```bash
-task release
-```
+The build uses an ad-hoc signature for local development. Distribution to other Macs requires your own Apple Developer signing and notarization setup.
 
-### Manual Build
-```bash
-xcodebuild -project Crack.xcodeproj -scheme Crack -configuration Release build
-```
+## Implementation
 
-## How It Works
-
-Crack reads the MacBook lid angle sensor via IOKit HID at 60 times per second. When it detects the angle changing (threshold: >0.001°), it plays a looping audio sample through AVAudioEngine with an AVAudioUnitVarispeed node. The varispeed rate is smoothly interpolated based on the angular velocity of the lid movement, creating a natural squeaky door effect.
-
-## License
-
-MIT
+The app polls the lid sensor at 10 Hz, increasing to 30 Hz after movement. It maps angular velocity to parameters of procedural AVAudioEngine synthesizers. An unsupported or inaccessible sensor is indicated in the menu.

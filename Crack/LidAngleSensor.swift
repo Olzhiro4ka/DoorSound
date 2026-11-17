@@ -48,7 +48,7 @@ class LidAngleSensor {
             &reportLength
         )
 
-        guard result == kIOReturnSuccess else { return -1 }
+        guard result == kIOReturnSuccess, reportLength >= 3 else { return -1 }
 
         let rawValue = (UInt16(report[2]) << 8) | UInt16(report[1])
         return Double(rawValue) / 100.0

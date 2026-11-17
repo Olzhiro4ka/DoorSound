@@ -9,33 +9,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let tagEnable = 100
     let tagAbout = 200
     let tagStartup = 250
-    let tagUpdate = 260
     let tagQuit = 300
     let tagSoundBase = 1000
 
-    // Update checker
     static let currentVersion: String = {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
     }()
-    static let repoOwner = "ronreiter"
-    static let repoName = "crack"
-    var latestRelease: (version: String, dmgURL: String, notes: String)?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         appState = AppState()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            if let img = NSImage(systemSymbolName: "door.left.hand.open", accessibilityDescription: "Crack") {
+            if let img = NSImage(systemSymbolName: "door.left.hand.open", accessibilityDescription: "DoorSound") {
                 img.isTemplate = true
                 button.image = img
             } else {
-                button.title = "Crack"
+                button.title = "DoorSound"
             }
         }
 
         buildMenu()
-        checkForUpdates(silent: true)
     }
 
     func buildMenu() {
@@ -83,6 +77,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(NSMenuItem.separator())
         }
 
+        if appState.sensorUnavailable {
+            let item = NSMenuItem(title: "Lid sensor unavailable", action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            menu.addItem(item)
+            menu.addItem(NSMenuItem.separator())
+        }
+
         let startupItem = NSMenuItem(title: "Start at Login", action: #selector(menuItemClicked(_:)), keyEquivalent: "")
         startupItem.target = self
         startupItem.tag = tagStartup
@@ -90,16 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         startupItem.state = isLoginItemEnabled() ? .on : .off
         menu.addItem(startupItem)
 
-        let updateTitle = latestRelease != nil ? "Update Available (\(latestRelease!.version))" : "Check for Updates…"
-        let updateItem = NSMenuItem(title: updateTitle, action: #selector(menuItemClicked(_:)), keyEquivalent: "")
-        updateItem.target = self
-        updateItem.tag = tagUpdate
-        updateItem.isEnabled = true
-        menu.addItem(updateItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let aboutItem = NSMenuItem(title: "About Crack", action: #selector(menuItemClicked(_:)), keyEquivalent: "")
+        let aboutItem = NSMenuItem(title: "About DoorSound", action: #selector(menuItemClicked(_:)), keyEquivalent: "")
         aboutItem.target = self
         aboutItem.tag = tagAbout
         aboutItem.isEnabled = true
@@ -107,7 +99,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit Crack", action: #selector(menuItemClicked(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit DoorSound", action: #selector(menuItemClicked(_:)), keyEquivalent: "q")
         quitItem.target = self
         quitItem.tag = tagQuit
         quitItem.isEnabled = true
@@ -122,7 +114,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             appState.isEnabled.toggle()
             if let button = statusItem.button {
                 let name = appState.isEnabled ? "door.left.hand.open" : "door.left.hand.closed"
-                if let img = NSImage(systemSymbolName: name, accessibilityDescription: "Crack") {
+                if let img = NSImage(systemSymbolName: name, accessibilityDescription: "DoorSound") {
                     img.isTemplate = true
                     button.image = img
                 }
@@ -133,19 +125,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             toggleLoginItem()
             buildMenu()
 
-        case tagUpdate:
-            if let release = latestRelease, let url = URL(string: release.dmgURL) {
-                NSWorkspace.shared.open(url)
-            } else {
-                checkForUpdates(silent: false)
-            }
-
         case tagAbout:
             NSApp.activate(ignoringOtherApps: true)
             NSApp.orderFrontStandardAboutPanel(options: [
-                .applicationName: "Crack",
+                .applicationName: "DoorSound",
                 .applicationVersion: AppDelegate.currentVersion,
-                .credits: NSAttributedString(string: "Makes your MacBook lid sound like a squeaky door.\n\n© 2026 Ron Reiter")
+                .credits: NSAttributedString(string: "Makes your MacBook lid sound like a squeaky door.")
             ])
 
         case tagQuit:
@@ -175,13 +160,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 if SMAppService.mainApp.status == .enabled {
                     try SMAppService.mainApp.unregister()
-                    NSLog("[Crack] Login item disabled")
+                    NSLog("[DoorSound] Login item disabled")
                 } else {
                     try SMAppService.mainApp.register()
-                    NSLog("[Crack] Login item enabled")
+                    NSLog("[DoorSound] Login item enabled")
                 }
             } catch {
-                NSLog("[Crack] Failed to toggle login item: %@", error.localizedDescription)
+                NSLog("[DoorSound] Failed to toggle login item: %@", error.localizedDescription)
             }
         }
     }
@@ -190,95 +175,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appState.volume = Float(sender.doubleValue)
     }
 
-    // MARK: - Update Checker
 
-    func checkForUpdates(silent: Bool) {
-        let urlStr = "https://api.github.com/repos/\(AppDelegate.repoOwner)/\(AppDelegate.repoName)/releases/latest"
-        guard let url = URL(string: urlStr) else { return }
-
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-            guard let self = self, let data = data, error == nil else {
-                if !silent {
-                    DispatchQueue.main.async {
-                        let alert = NSAlert()
-                        alert.messageText = "Update Check Failed"
-                        alert.informativeText = "Could not reach GitHub. Please try again later."
-                        alert.runModal()
-                    }
-                }
-                return
-            }
-
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let tagName = json["tag_name"] as? String else { return }
-
-            let latest = tagName.replacingOccurrences(of: "v", with: "")
-            let current = AppDelegate.currentVersion
-
-            if self.isVersion(latest, newerThan: current) {
-                // Find DMG asset
-                var dmgURL = json["html_url"] as? String ?? ""
-                if let assets = json["assets"] as? [[String: Any]] {
-                    for asset in assets {
-                        if let name = asset["name"] as? String, name.hasSuffix(".dmg"),
-                           let downloadURL = asset["browser_download_url"] as? String {
-                            dmgURL = downloadURL
-                            break
-                        }
-                    }
-                }
-                let notes = json["body"] as? String ?? ""
-
-                DispatchQueue.main.async {
-                    self.latestRelease = (version: latest, dmgURL: dmgURL, notes: notes)
-                    self.buildMenu()
-
-                    NSApp.activate(ignoringOtherApps: true)
-                    let alert = NSAlert()
-                    alert.messageText = "Crack \(latest) Available"
-                    alert.informativeText = "You're running \(current). Would you like to download the update?"
-                    alert.addButton(withTitle: "Download")
-                    alert.addButton(withTitle: "Later")
-                    if alert.runModal() == .alertFirstButtonReturn {
-                        if let url = URL(string: dmgURL) {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }
-                }
-            } else if !silent {
-                DispatchQueue.main.async {
-                    let alert = NSAlert()
-                    alert.messageText = "You're Up to Date"
-                    alert.informativeText = "Crack \(current) is the latest version."
-                    alert.runModal()
-                }
-            }
-        }.resume()
-    }
-
-    private func isVersion(_ a: String, newerThan b: String) -> Bool {
-        let aParts = a.split(separator: ".").compactMap { Int($0) }
-        let bParts = b.split(separator: ".").compactMap { Int($0) }
-        for i in 0..<max(aParts.count, bParts.count) {
-            let av = i < aParts.count ? aParts[i] : 0
-            let bv = i < bParts.count ? bParts[i] : 0
-            if av > bv { return true }
-            if av < bv { return false }
-        }
-        return false
-    }
 }
 
 class AppState {
     var isEnabled = true {
         didSet {
-            if !isEnabled { currentEngine.stop() }
+            if !isEnabled {
+                currentEngine.stop()
+                lastAngle = nil
+            }
         }
     }
     var volume: Float = 0.7
     var selectedSound: String = "Knuckle Crack" {
         didSet {
-            NSLog("[Crack] Switching sound to: %@", selectedSound)
+            NSLog("[DoorSound] Switching sound to: %@", selectedSound)
             currentEngine.stop()
             if let engine = engineMap[selectedSound] {
                 currentEngine = engine
@@ -304,18 +216,15 @@ class AppState {
     var currentEngine: CreakAudioEngine!
 
     private var sensorTimer: DispatchSourceTimer?
-    private var audioTimer: DispatchSourceTimer?
     private var lastAngle: Double?
     private var lastAngleTime: TimeInterval = 0
     private var lastChangeTime: TimeInterval = 0
     private var smoothedVelocity: Double = 0
     private var logCounter = 0
-    private var isAudioActive = false
     private var isHighFreq = false
 
     private let silenceDelay: TimeInterval = 0.15
     private let highFreqDuration: TimeInterval = 10.0
-    private let sensorQueue = DispatchQueue(label: "com.ronreiter.crack.sensor", qos: .userInteractive)
 
     init() {
         // Build engine map
@@ -343,7 +252,7 @@ class AppState {
 
     private func setSensorRate(fast: Bool) {
         sensorTimer?.cancel()
-        sensorTimer = DispatchSource.makeTimerSource(queue: sensorQueue)
+        sensorTimer = DispatchSource.makeTimerSource(queue: .main)
         let ms = fast ? 33 : 100  // 30fps vs 10fps
         sensorTimer?.schedule(deadline: .now(), repeating: .milliseconds(ms))
         sensorTimer?.setEventHandler { [weak self] in
@@ -352,9 +261,9 @@ class AppState {
         sensorTimer?.resume()
         isHighFreq = fast
         if fast {
-            NSLog("[Crack] Sensor → 30fps")
+            NSLog("[DoorSound] Sensor → 30fps")
         } else {
-            NSLog("[Crack] Sensor → 10fps")
+            NSLog("[DoorSound] Sensor → 10fps")
         }
     }
 
@@ -368,29 +277,16 @@ class AppState {
         setSensorRate(fast: false)
     }
 
-    private func startAudioTick() {
-        guard !isAudioActive else { return }
-        isAudioActive = true
-        audioTimer = DispatchSource.makeTimerSource(queue: .main)
-        audioTimer?.schedule(deadline: .now(), repeating: .milliseconds(8))
-        audioTimer?.setEventHandler { [weak self] in
-            self?.currentEngine.tick()
-        }
-        audioTimer?.resume()
-    }
-
-    private func stopAudioTick() {
-        guard isAudioActive else { return }
-        isAudioActive = false
-        audioTimer?.cancel()
-        audioTimer = nil
-    }
-
     private func pollSensor() {
         guard isEnabled else { return }
 
         let angle = lidSensor.readAngle()
-        guard angle >= 0 else { return }
+        guard angle >= 0 else {
+            currentEngine.stop()
+            lastAngle = nil
+            smoothedVelocity = 0
+            return
+        }
 
         let now = ProcessInfo.processInfo.systemUptime
 
@@ -416,21 +312,13 @@ class AppState {
 
             let rate = mapVelocityToRate(smoothedVelocity)
             if logCounter % 30 == 0 {
-                NSLog("[Crack] PLAY delta=%.4f° vel=%.3f°/s smooth=%.3f rate=%.2f", delta, instantVel, smoothedVelocity, rate)
+                NSLog("[DoorSound] PLAY delta=%.4f° vel=%.3f°/s smooth=%.3f rate=%.2f", delta, instantVel, smoothedVelocity, rate)
             }
             logCounter += 1
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.startAudioTick()
-                self.currentEngine.play(rate: rate, volume: self.volume)
-            }
+            currentEngine.play(rate: rate, volume: volume)
         } else if now - lastChangeTime > silenceDelay {
             smoothedVelocity = 0
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.currentEngine.stop()
-                self.stopAudioTick()
-            }
+            currentEngine.stop()
             // Drop back to low frequency after no movement for highFreqDuration
             if isHighFreq && now - lastChangeTime > highFreqDuration {
                 switchToLowFreq()
