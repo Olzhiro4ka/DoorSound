@@ -17,6 +17,10 @@ for size in 16 32 128 256 512; do
   cp "Crack/Assets.xcassets/AppIcon.appiconset/icon_${double}.png" "build/AppIcon.iconset/icon_${size}x${size}@2x.png"
 done
 iconutil -c icns build/AppIcon.iconset -o "$app/Contents/Resources/AppIcon.icns"
-MACOSX_DEPLOYMENT_TARGET=13.0 swiftc -swift-version 5 -O Crack/*.swift -o "$app/Contents/MacOS/DoorSound"
+swift_sources=()
+while IFS= read -r -d "" source; do
+    swift_sources+=("$source")
+done < <(find Crack -name "*.swift" -print0)
+MACOSX_DEPLOYMENT_TARGET=13.0 swiftc -swift-version 5 -O "${swift_sources[@]}" -o "$app/Contents/MacOS/DoorSound"
 codesign --force --sign - "$app"
 echo "Built $app"

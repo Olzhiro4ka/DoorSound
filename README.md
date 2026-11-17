@@ -17,3 +17,12 @@ The build uses an ad-hoc signature for local development. Distribution to other 
 ## Implementation
 
 The app polls the lid sensor at 10 Hz, increasing to 30 Hz after movement. It maps angular velocity to parameters of procedural AVAudioEngine synthesizers. An unsupported or inaccessible sensor is indicated in the menu.
+
+## Project structure
+
+- `Crack/App/` contains the application entry point and state.
+- `Crack/MenuBar/` contains the menu bar interface.
+- `Crack/Sensor/` contains lid angle hardware access.
+- `Crack/Audio/` contains the audio engine interface and sound implementations.
+- `Crack/Assets.xcassets/`, `Crack/Info.plist`, and `Crack/Crack.entitlements` contain application resources and configuration.
+- `scripts/build.sh` builds the application bundle in `build/`.
