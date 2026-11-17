@@ -21,6 +21,9 @@ squeak.m4a
 
 
 # qCoding
-
 AGENTS.md
 CLAUDE.md
+
+
+# VSCode
+*.code-workspace
