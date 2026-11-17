@@ -117,7 +117,6 @@ class SynthCrackEngine: CreakAudioEngine {
         engine.attach(srcNode)
         engine.connect(srcNode, to: engine.mainMixerNode,
                        format: AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!)
-        do { try engine.start() } catch {}
     }
 
     func play(rate: Float, volume: Float) {
@@ -212,7 +211,6 @@ class FMSynthEngine: CreakAudioEngine {
         engine.attach(srcNode)
         engine.connect(srcNode, to: engine.mainMixerNode,
                        format: AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!)
-        do { try engine.start() } catch {}
     }
 
     func play(rate: Float, volume: Float) {
@@ -319,7 +317,6 @@ class NoiseResonantEngine: CreakAudioEngine {
         engine.attach(srcNode)
         engine.connect(srcNode, to: engine.mainMixerNode,
                        format: AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!)
-        do { try engine.start() } catch {}
     }
 
     func play(rate: Float, volume: Float) {

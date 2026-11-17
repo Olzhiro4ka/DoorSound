@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crack - Squeaky MacBook Lid</title>
+    <title>DoorSound - Squeaky MacBook Lid</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -169,12 +169,12 @@
 </head>
 <body>
     <header class="header">
-        <a href="https://github.com/ronreiter/crack" class="header-left">
-            <img src="icon.png" alt="Crack" class="header-icon">
-            <span class="header-title">Crack</span>
+        <a href="https://github.com/Olzhiro4ka/DoorSound" class="header-left">
+            <img src="icon.png" alt="DoorSound" class="header-icon">
+            <span class="header-title">DoorSound</span>
         </a>
         <div class="header-right">
-            <a href="https://github.com/ronreiter/crack" class="github-btn">
+            <a href="https://github.com/Olzhiro4ka/DoorSound" class="github-btn">
                 <svg width="18" height="18" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                 <span>GitHub</span>
             </a>
@@ -186,10 +186,10 @@
     </header>
 
     <div class="hero">
-        <img src="icon.png" alt="Crack App Icon" class="icon">
-        <h1>Crack</h1>
+        <img src="icon.png" alt="DoorSound App Icon" class="icon">
+        <h1>DoorSound</h1>
         <p class="tagline">Turn your MacBook into a squeaky door.<br>Every lid movement triggers a satisfying creak.</p>
-        <a href="https://github.com/ronreiter/crack/releases/latest" class="download-btn">Download for macOS</a>
+        <a href="https://github.com/Olzhiro4ka/DoorSound/releases/latest" class="download-btn">Download for macOS</a>
         <p class="version">Requires macOS 13.0 or later &middot; Apple Silicon</p>
         <p class="req">Free &amp; open source</p>
     </div>
@@ -212,7 +212,7 @@
         <div class="feature">
             <div class="feature-icon">📐</div>
             <h3>Lid Angle Sensor</h3>
-            <p>Reads the built-in AppleHID lid sensor at 60fps to detect the slightest movement.</p>
+            <p>Reads the lid sensor on supported MacBooks to detect movement.</p>
         </div>
         <div class="feature">
             <div class="feature-icon">🎵</div>
@@ -237,12 +237,12 @@
         <div class="feature">
             <div class="feature-icon">🔓</div>
             <h3>Open Source</h3>
-            <p>MIT licensed. Signed and notarized by Apple. No tracking, no telemetry, no nonsense.</p>
+            <p>Explore the source code on GitHub.</p>
         </div>
     </div>
 
     <footer>
-        <p>Made by <a href="https://github.com/ronreiter">Ron Reiter</a> &middot; <a href="https://github.com/ronreiter/crack">Source on GitHub</a></p>
+        <p>Based on the work of <a href="https://github.com/ronreiter">Ron Reiter</a> &middot; <a href="https://github.com/Olzhiro4ka/DoorSound">Source on GitHub</a></p>
     </footer>
 
     <script>
@@ -446,7 +446,7 @@
         setLidAngle(110);
 
         // Fetch GitHub stars
-        fetch('https://api.github.com/repos/ronreiter/crack')
+        fetch('https://api.github.com/repos/Olzhiro4ka/DoorSound')
             .then(r => r.json())
             .then(d => {
                 if (d.stargazers_count !== undefined) {
