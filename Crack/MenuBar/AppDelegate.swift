@@ -1,7 +1,7 @@
 import AppKit
 import ServiceManagement
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var statusItem: NSStatusItem!
     var appState: AppState!
 
@@ -9,8 +9,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let tagEnable = 100
     let tagAbout = 200
     let tagStartup = 250
+    let tagSensor = 260
     let tagQuit = 300
-    let tagSoundBase = 1000
 
     static let currentVersion: String = {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
@@ -35,11 +35,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func buildMenu() {
         let menu = NSMenu()
         menu.autoenablesItems = false
+        menu.delegate = self
 
-        let enableItem = NSMenuItem(title: appState.isEnabled ? "✅ Enabled" : "❌ Disabled", action: #selector(menuItemClicked(_:)), keyEquivalent: "")
+        let enableItem = NSMenuItem(title: "Sound Enabled", action: #selector(menuItemClicked(_:)), keyEquivalent: "")
         enableItem.target = self
         enableItem.tag = tagEnable
         enableItem.isEnabled = true
+        enableItem.state = appState.isEnabled ? .on : .off
         menu.addItem(enableItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -50,6 +52,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(volumeLabel)
 
         let slider = NSSlider(value: Double(appState.volume), minValue: 0, maxValue: 1, target: self, action: #selector(volumeChanged(_:)))
+        slider.setAccessibilityLabel("Volume")
+        slider.isEnabled = appState.isEnabled
         slider.frame = NSRect(x: 20, y: 0, width: 180, height: 24)
         let sliderView = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 24))
         sliderView.addSubview(slider)
@@ -59,30 +63,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Sound picker submenu
-        let sounds = appState.availableSounds
-        if sounds.count > 1 {
-            let soundMenu = NSMenu()
-            for (index, sound) in sounds.enumerated() {
-                let item = NSMenuItem(title: sound.capitalized, action: #selector(menuItemClicked(_:)), keyEquivalent: "")
-                item.target = self
-                item.tag = tagSoundBase + index
-                item.isEnabled = true
-                item.state = sound == appState.selectedSound ? .on : .off
-                soundMenu.addItem(item)
-            }
-            let soundItem = NSMenuItem(title: "Sound", action: nil, keyEquivalent: "")
-            soundItem.submenu = soundMenu
-            menu.addItem(soundItem)
-            menu.addItem(NSMenuItem.separator())
-        }
-
-        if appState.sensorUnavailable {
-            let item = NSMenuItem(title: "Lid sensor unavailable", action: nil, keyEquivalent: "")
-            item.isEnabled = false
-            menu.addItem(item)
-            menu.addItem(NSMenuItem.separator())
-        }
+        let sensorItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        sensorItem.tag = tagSensor
+        sensorItem.isEnabled = false
+        menu.addItem(sensorItem)
+        menu.addItem(NSMenuItem.separator())
 
         let startupItem = NSMenuItem(title: "Start at Login", action: #selector(menuItemClicked(_:)), keyEquivalent: "")
         startupItem.target = self
@@ -106,6 +91,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(quitItem)
 
         statusItem.menu = menu
+    }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        if let item = menu.item(withTag: tagSensor) {
+            item.title = appState.sensorUnavailable ? "Lid sensor unavailable on this Mac" : "Lid sensor connected"
+        }
+        if let item = menu.item(withTag: tagStartup) {
+            item.state = isLoginItemEnabled() ? .on : .off
+        }
     }
 
     @objc func menuItemClicked(_ sender: NSMenuItem) {
@@ -137,14 +131,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSApplication.shared.terminate(nil)
 
         default:
-            if sender.tag >= tagSoundBase {
-                let index = sender.tag - tagSoundBase
-                let sounds = appState.availableSounds
-                if index >= 0, index < sounds.count {
-                    appState.selectedSound = sounds[index]
-                    buildMenu()
-                }
-            }
+            break
         }
     }
 
@@ -167,6 +154,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             } catch {
                 NSLog("[DoorSound] Failed to toggle login item: %@", error.localizedDescription)
+                let alert = NSAlert(error: error)
+                alert.messageText = "Could not change Start at Login"
+                alert.runModal()
             }
         }
     }
