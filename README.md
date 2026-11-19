@@ -22,11 +22,11 @@ The default build is signed ad hoc for local testing only. Public distribution r
 
 ## Audio credits
 
-The opening and closing clips are separate excerpts of [“Squeaky door” by LeonMire](https://commons.wikimedia.org/wiki/File:Squeaky_door.ogg), published through PDSounds and dedicated to the public domain. The excerpts were trimmed and filtered, then converted to mono WAV at 44.1 kHz.
+The opening and closing clips are two excerpts of [“Squeaky door hinge” by MKFI](https://commons.wikimedia.org/wiki/File:Squeaky_door_hinge.ogg), released under [CC0](https://creativecommons.org/publicdomain/zero/1.0/). The excerpts were trimmed, filtered, and faded, then converted to mono WAV at 44.1 kHz.
 
 ## Implementation
 
-The app polls the lid sensor at 10 Hz, increasing to 30 Hz during movement. The direction selects a recorded clip, the angle selects a position within it, and angular velocity controls the intensity. Short, overlapping excerpts preserve the recorded pitch and smooth direction changes. The sound fades when the lid stops moving. An unsupported or inaccessible sensor is indicated in the menu.
+The app polls the lid at 10 Hz when idle and 30 Hz during movement. Each movement starts a recorded creak for its direction. Angular velocity adjusts playback rate and volume. The recording plays once and fades when the lid stops or changes direction. An unsupported or inaccessible sensor is indicated in the menu.
 
 ## Project structure
 
