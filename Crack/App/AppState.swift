@@ -99,7 +99,7 @@ class AppState {
             lastAngleTime = now
             lastChangeTime = now
             switchToHighFreq()
-            currentEngine?.play(angle: angle, velocity: smoothedVelocity, volume: volume)
+            currentEngine?.play(velocity: smoothedVelocity, volume: volume)
         } else if now - lastChangeTime > silenceDelay {
             smoothedVelocity = 0
             currentEngine?.stop()
