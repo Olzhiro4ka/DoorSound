@@ -3,6 +3,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 app="build/DoorSound.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" build/AppIcon.iconset
+cp Crack/Resources/door-{opening,closing}.wav "$app/Contents/Resources/"
+if [[ -f "$app/Contents/Resources/door.wav" ]]; then
+    unlink "$app/Contents/Resources/door.wav"
+fi
 cp Crack/Info.plist "$app/Contents/Info.plist"
 plist="$app/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleExecutable DoorSound' "$plist"
